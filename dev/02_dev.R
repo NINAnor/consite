@@ -45,10 +45,19 @@ usethis::use_data_raw(name = "my_dataset", open = FALSE)
 ## Add one line by test you want to create
 usethis::use_test("app")
 
+## Packages
+usethis::use_package("rgee")
+usethis::use_package("dplyr")
+usethis::use_package("sf")
+usethis::use_package("shiny")
+usethis::use_package("mapview")
+# usethis::use_package("sp")
+# usethis::use_package("bigquery")
+
 # Documentation
 
 ## Vignette ----
-usethis::use_vignette("geoprospectiveADMINe")
+usethis::use_vignette("geoprospectiveADMIN")
 devtools::build_vignettes()
 
 ## Code Coverage----

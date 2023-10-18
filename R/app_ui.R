@@ -10,7 +10,13 @@ app_ui <- function(request) {
     golem_add_external_resources(),
     # Your application UI logic
     fluidPage(
-      h1("geoprospectiveADMINe")
+      titlePanel(title =  div(img(src="logo.PNG", width ='120'), 'Admin portal of geoprospective'), windowTitle = "Admin Geopros" ),
+      tabsetPanel(id = "inTabset",
+                  tabPanel(title = "Create project", value = "p0",
+                           mod_define_study_area_ui("study_area")),
+                  tabPanel(title = "upload your ecosystem services", value = "p1"),
+                  tabPanel(title = "invite participants", value = "p2"),
+                  tabPanel(title = "manage studies", value = "p3"))
     )
   )
 }
