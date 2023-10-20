@@ -21,9 +21,9 @@ attachment::att_amend_desc()
 ## Add modules ----
 ## Create a module infrastructure in R/
 golem::add_module(name = "define_study_area", with_test = TRUE) # Name of the module
-golem::add_module(name = "define_services", with_test = TRUE) # Name of the module
-golem::add_module(name = "invite_participants", with_test = TRUE) # Name of the module
-golem::add_module(name = "modify_study_status", with_test = TRUE) # Name of the module
+golem::add_module(name = "explore_studies", with_test = TRUE) # Name of the module
+# golem::add_module(name = "invite_participants", with_test = TRUE) # Name of the module
+golem::add_module(name = "manage_study", with_test = TRUE) # Name of the module
 
 ## Add helper functions ----
 ## Creates fct_* and utils_*
@@ -45,14 +45,17 @@ usethis::use_data_raw(name = "my_dataset", open = FALSE)
 ## Add one line by test you want to create
 usethis::use_test("app")
 
+
 ## Packages
 usethis::use_package("rgee")
 usethis::use_package("dplyr")
 usethis::use_package("sf")
 usethis::use_package("shiny")
 usethis::use_package("mapview")
-# usethis::use_package("sp")
+usethis::use_package("stringi")
+usethis::use_package("DT")
 # usethis::use_package("bigquery")
+# bigquery::bq_auth("C:/Users/reto.spielhofer/OneDrive - NINA/Documents/Projects/PAREUS/pareus-4c675ffa9441.json")
 
 # Documentation
 

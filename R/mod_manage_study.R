@@ -1,4 +1,4 @@
-#' define_services UI Function
+#' manage_study UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,17 +7,17 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList 
-mod_define_services_ui <- function(id){
+mod_manage_study_ui <- function(id){
   ns <- NS(id)
   tagList(
  
   )
 }
     
-#' define_services Server Functions
+#' manage_study Server Functions
 #'
 #' @noRd 
-mod_define_services_server <- function(id){
+mod_manage_study_server <- function(id){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
  
@@ -25,7 +25,7 @@ mod_define_services_server <- function(id){
 }
     
 ## To be copied in the UI
-# mod_define_services_ui("define_services_1")
+# mod_manage_study_ui("manage_study_1")
     
 ## To be copied in the server
-# mod_define_services_server("define_services_1")
+# mod_manage_study_server("manage_study_1")
