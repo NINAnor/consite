@@ -10,8 +10,9 @@
 mod_define_study_area_ui <- function(id){
   ns <- NS(id)
   tagList(
+        h5("You need a 8 digit project ID to create different case study areas for the project"),
         textInput(ns("proj_id"),"provide the proj id"),
-        actionButton(ns("sub1"),"create new study in the project"),
+        actionButton(ns("check_proj"),"check project"),
         br()
   )
 }
@@ -23,27 +24,47 @@ mod_define_study_area_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
+    ### load the data (local so far)
+    projects<-readRDS("C:/Users/reto.spielhofer/OneDrive - NINA/Documents/Projects/GEOPROSPECTIVE/admin_app/projects.rds")
+    study_geom<-readRDS("C:/Users/reto.spielhofer/OneDrive - NINA/Documents/Projects/GEOPROSPECTIVE/admin_app/study_geom/study_geom.rds")
+    es_in<-readRDS("C:/Users/reto.spielhofer/OneDrive - NINA/Documents/Projects/GEOPROSPECTIVE/admin_app/es.rds")
+
+    observeEvent(input$check_proj,{
+      if(input$proj_id %in% projects$projID){
+        insertUI(selector =paste0("#",ns("check_proj")),
+                 where = "afterEnd",
+                 ui=tagList(
+                   textInput(ns("stud_name"),"Name of case study area"),
+                   br(),
+                   textInput(ns("stud_descr"), "Description of case study area"),
+                   br(),
+                   h5("upload shp file of study area extent"),
+                   fileInput(ns("filemap"), "", accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj"), multiple=TRUE),
+                   br(),
+                   leafletOutput(ns("mapview")),
+                   br(),
+                   actionButton(ns("sub2"),"upload study area to server")
+
+                 )
+                 )
+
+      }else{
+        insertUI(selector =paste0("#",ns("check_proj")),
+                 where = "afterEnd",
+                 ui=tagList(h5("project not found")))
+      }
+
+    })
+
+
     ## read in the base dat (not after with db)
     # study_area<-read.csv("C:/Users/reto.spielhofer/OneDrive - NINA/Documents/Projects/GEOPROSPECTIVE/admin_app/studyarea.csv")
 
-    projID<-eventReactive(input$sub1,{
-      projID<-stri_rand_strings(1, 10, pattern = "[A-Za-z0-9]")
+    studyID<-eventReactive(input$check_proj,{
+      studyID<-stri_rand_strings(1, 12, pattern = "[A-Za-z0-9]")
     })
 
-    observeEvent(input$sub1,{
-      ## here create a new UID for the study area
-      ## show the shp reader and the map output
-      insertUI(selector =paste0("#",ns("sub1")),
-               where = "afterEnd",
-               ui=tagList(
-                 fileInput(ns("filemap"), "", accept=c('.shp','.dbf','.sbn','.sbx','.shx',".prj"), multiple=TRUE),
-                 br(),
-                 plotOutput(ns("mapview")),
-                 br(),
-                 actionButton(ns("sub2"),"upload study area to server")
-               )
-      )
-    })
+
 
     observeEvent(input$sub2,{
       insertUI(selector = paste0("#",ns("sub2")),
@@ -60,22 +81,26 @@ mod_define_study_area_server <- function(id){
     })
     ## upload the table
     observe({
-      projID<-projID()
+      studyID<-studyID()
       dt<-input$es_file
       if(is.null(dt)){
         return()
       }
-      es_data<-read.csv(dt$datapath)
-      es_data$projID<-rep(projID,nrow(es_data))
+      es_study<-read.csv(dt$datapath)
+      es_study$studyID<-rep(studyID,nrow(es_study))
+      es_study$projID<-rep(input$proj_id,nrow(es_study))
       output$es_table_out<-renderDT(
-        es_data
+        es_study
       )
+      saveRDS(rbind(es_study,es_in),"C:/Users/reto.spielhofer/OneDrive - NINA/Documents/Projects/GEOPROSPECTIVE/admin_app/es.rds")
     })
+
+
 
 
     ## upload the shp and attach uid
     observe({
-      projID<-projID()
+      studyID<-studyID()
       shpdf <- input$filemap
       if(is.null(shpdf)){
         return()
@@ -90,13 +115,19 @@ mod_define_study_area_server <- function(id){
 
       map <- sf::st_read(paste(uploaddirectory, shpdf$name[grep(pattern="*.shp$", shpdf$name)], sep="/"))#,  delete_null_obj=TRUE)
       map <- sf::st_transform(map, 4326)
-      map$studyregID<-rep(projID,nrow(map))
+      map$studyID<-rep(studyID,nrow(map))
+      map$projID<-rep(input$proj_id,nrow(map))
+      map_out<-as.data.frame(map)
+      study_geom<-rbind(study_geom,map_out)
+      saveRDS(study_geom,"C:/Users/reto.spielhofer/OneDrive - NINA/Documents/Projects/GEOPROSPECTIVE/admin_app/study_geom/study_geom.rds")
 
       ## store the sf object and the project key in the bq
 
       ## plot it
-      output$mapview<-renderPlot({
-        plot(map)
+      output$mapview<-renderLeaflet({
+        leaflet(map) %>%
+          addProviderTiles("CartoDB.Positron") %>%
+          addPolygons(color = "green")
       })
 
 
@@ -104,44 +135,6 @@ mod_define_study_area_server <- function(id){
 
     ## upload csv table
 
-
-
-    # observeEvent(input$b2,{
-    #   # checkproject credentials
-    #
-    #   if(input$proj_id %in% study_area$projID & input$area_id %in% study_area$studyareaID){
-    #     status<-study_area%>%filter(projID==input$proj_id)%>%select(areaStatus)
-    #     output$status1<-renderText("the project is available")
-    #     output$cond_ui1<-renderUI({
-    #       # br()
-    #       paste0("The current status of the project is: ",status)
-    #       actionButton(ns("close"),"close current delphi round")
-    #       # conditionalPanel(condition = "status == 1",
-    #       #
-    #
-    #
-    #     })
-    #   }else{
-    #     output$status1<-renderText("The project and study area is not available")
-    #   }
-    #
-    # })
-    #
-    # observeEvent(input$close,{
-    #   study_area_sel<-study_area%>%filter(projID==input$proj_id)
-    #   if(study_area_sel$areaStatus == 1){
-    #     ## write proj status == 2 in table and save so that user app will not open R1 further
-    #     print(" Round one of your project will be closed, and the CV raster per ES calculated")
-    #     ## merge all ee_rasters with input$studyareaID and calculate CV raster per ES -->
-    #
-    #
-    #   }else if(study_area_sel$areaStatus == 2){
-    #     ## write proj status == 3 in table and save so that user app will not open R2 further
-    #     print(" Round two of your project will be closed, and the CV raster per ES calculated")
-    #     ## merge all ee_rasters with input$studyareaID and calculate CV raster per ES -->
-    #   }
-    #
-    # })
 
 
 
